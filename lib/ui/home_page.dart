@@ -14,32 +14,24 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final String _urlTrendingGifs =
-      'https://api.giphy.com/v1/gifs/trending?api_key=1C230EhUYI2n5JMzrj5zrpXJGywq3TOE&limit=20&rating=g';
+      'https://api.giphy.com/v1/gifs/trending?api_key=MewXAjNwjDVQVK4KtlplOZRLyBOdJ8K3&limit=20&rating=g';
 
-  String _search;
+  final TextEditingController _searchController = TextEditingController();
+
   int _offset = 0;
 
   Future<dynamic> _getSearchGifs() async {
     http.Response response;
 
-    if (_search == null || _search.isEmpty) {
+    if (_searchController.text == null || _searchController.text.isEmpty) {
       response = await http.get(_urlTrendingGifs);
     } else {
       response = await http.get(
-          'https://api.giphy.com/v1/gifs/search?api_key=1C230EhUYI2n5JMzrj5zrpXJGywq3TOE&q=$_search&limit=19&offset=$_offset&rating=g&lang=en');
+          'https://api.giphy.com/v1/gifs/search?api_key=MewXAjNwjDVQVK4KtlplOZRLyBOdJ8K3&q=${_searchController.text}&limit=19&offset=$_offset&rating=g&lang=en');
     }
 
     return jsonDecode(response.body);
   }
-
-  // @override
-  // void initState() {
-  //   super.initState();
-
-  //   _getSearchGifs().then((dynamic map) {
-  //     print(map);
-  //   });
-  // }
 
   Widget builder(BuildContext context, AsyncSnapshot<dynamic> snapshot) {
     switch (snapshot.connectionState) {
@@ -72,7 +64,7 @@ class _HomePageState extends State<HomePage> {
           crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10),
       itemCount: _getCount(snapshot),
       itemBuilder: (BuildContext context, int index) {
-        if (_search == null ||
+        if (_searchController.text == null ||
             index < int.parse(snapshot.data['data'].length.toString())) {
           return GestureDetector(
             child: FadeInImage.memoryNetwork(
@@ -131,7 +123,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   int _getCount(AsyncSnapshot<dynamic> snapshot) {
-    if (_search == null) {
+    print(snapshot.data['data']);
+    if (_searchController.text == null || _searchController.text.isEmpty) {
       return int.parse(snapshot.data['data'].length.toString());
     } else {
       return int.parse((snapshot.data['data'].length + 1).toString());
@@ -153,16 +146,25 @@ class _HomePageState extends State<HomePage> {
           Padding(
             padding: const EdgeInsets.all(10),
             child: TextField(
-              decoration: const InputDecoration(
+              controller: _searchController,
+              decoration: InputDecoration(
                 labelText: 'Pesquise aqui',
-                labelStyle: TextStyle(color: Colors.white),
-                border: OutlineInputBorder(),
+                labelStyle: const TextStyle(color: Colors.white),
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    setState(() {
+                      _searchController.text = '';
+                    });
+                  },
+                ),
               ),
               style: const TextStyle(color: Colors.white, fontSize: 18),
               textAlign: TextAlign.center,
               onSubmitted: (String text) {
                 setState(() {
-                  _search = text;
+                  _searchController.text = text;
                   _offset = 0;
                 });
               },
